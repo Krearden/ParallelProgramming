@@ -40,13 +40,14 @@ int main()
 	double a = 4;
 	double b = 8;
 	double error, ethalone = 2.86376645469595;
+	double result_stepbystep;
 
 	//201 итерация
 	for (N = 100000; N <= 2100000; N += 10000)
 	{
 		clock_t t;
 		t = clock();
-		double result_stepbystep = simpsonMethod(a, b, N);
+		result_stepbystep = simpsonMethod(a, b, N);
 		t = clock() - t;
 		error = fabs(result_stepbystep - ethalone) / ethalone;
 		printf("\n%d %f %.14f %e", N, (float)t / CLOCKS_PER_SEC, result_stepbystep, error);
