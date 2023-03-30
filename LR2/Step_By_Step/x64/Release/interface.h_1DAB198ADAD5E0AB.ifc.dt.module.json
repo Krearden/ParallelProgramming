@@ -1,9 +1,0 @@
-{
-    "Version": "1.1",
-    "Data": {
-        "Source": "c:\\users\\user\\documents\\visual studio 2022\\libraries\\opencv\\build\\include\\opencv2\\core\\hal\\interface.h",
-        "ProvidedModule": "",
-        "ImportedModules": [],
-        "ImportedHeaderUnits": []
-    }
-}
