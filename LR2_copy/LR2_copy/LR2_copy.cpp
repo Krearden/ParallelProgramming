@@ -46,7 +46,7 @@ int main() {
     Scalar value(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
     copyMakeBorder(input_image, temp_image, 3, 3, 3, 3, BORDER_REPLICATE, value);
 
-    //создаем новое изображение
+    //создаем новое изображение 
     Mat output_image = Mat::ones(rows, cols, CV_8UC3);
 
 
