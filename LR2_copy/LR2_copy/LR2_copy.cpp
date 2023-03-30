@@ -13,7 +13,7 @@ using namespace cv;
 
 int main() {
     // Загружаем изображение с компьютера
-    Mat input_image = imread("C:\\Users\\User\\Documents\\ParallelProgramming\\LR2\\input2.jpg");
+    Mat input_image = imread("C:\\Users\\User\\Documents\\ParallelProgramming\\LR2_copy\\input.png");
 
     //проверка
     if (input_image.empty()) {
