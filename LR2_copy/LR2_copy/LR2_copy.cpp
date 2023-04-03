@@ -12,7 +12,7 @@ using namespace cv;
 
 
 int main() {
-    system("chcp 1251");
+    system("chcp 65001");
 
     // Загружаем изображение с компьютера
     Mat input_image = imread("C:\\Users\\User\\Documents\\ParallelProgramming\\LR2_copy\\input.png");
