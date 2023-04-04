@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LR2_copy", "LR2_copy\LR2_copy.vcxproj", "{65F106EF-0C8B-4C2A-8FA5-4B369BD3E868}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Step_by_step", "LR2_copy\LR2_copy.vcxproj", "{65F106EF-0C8B-4C2A-8FA5-4B369BD3E868}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

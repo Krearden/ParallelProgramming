@@ -19,9 +19,7 @@ int main() {
     system("chcp 65001");
 
     // Загружаем изображение с компьютера
-    Mat input_image = imread("C:\\Users\\User\\Documents\\ParallelProgramming\\LR2_copy\\input_512x512.png");
-
-    cout << input_image.type();
+    Mat input_image = imread("C:\\Users\\User\\Documents\\ParallelProgramming\\LR2\\LR2_Step_by_step\\input_1024x1024.png");
 
     //проверка
     if (input_image.empty()) {
@@ -70,7 +68,7 @@ int main() {
             pixel_neighborhood = temp_image.rowRange(i - PADDING, i + PADDING + 1)
                 .colRange(j - PADDING, j + PADDING + 1);
 
-
+            //выполняем операцию свертки
             for (int k = 0; k < 7; k++)
             {
                 for (int l = 0; l < 7; l++)

@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="LR2_copy.cpp">
+    <ClCompile Include="Step_by_step.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
