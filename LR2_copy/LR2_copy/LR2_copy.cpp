@@ -60,6 +60,7 @@ int main() {
     //проходимся по всем пикселям изображения, кроме padding
     Mat pixel_neighborhood;
     Vec3b temp_pixel(0, 0, 0);
+    int r = 0, g = 0, b = 0;
     
     for (int i = PADDING; i < temp_rows - PADDING; i++)
     {
@@ -69,7 +70,6 @@ int main() {
             pixel_neighborhood = temp_image.rowRange(i - PADDING, i + PADDING + 1)
                 .colRange(j - PADDING, j + PADDING + 1);
 
-            int r = 0, g = 0, b = 0;
 
             for (int k = 0; k < 7; k++)
             {
@@ -86,11 +86,17 @@ int main() {
             g /= NORM_COEFICIENT;
             b /= NORM_COEFICIENT;
 
+            //присваеваем значения каналов пикселю
             temp_pixel[0] = b;
             temp_pixel[1] = g;
             temp_pixel[2] = r;
+
+            //записываем найденный пиксель в новое изображение
             output_image.at<Vec3b>(i - PADDING, j - PADDING) = temp_pixel;
+
+            //обнуляем значения для следующей итерации
             temp_pixel = Vec3b(0, 0, 0);
+            b = 0; g = 0; r = 0;
         }
     }
 
