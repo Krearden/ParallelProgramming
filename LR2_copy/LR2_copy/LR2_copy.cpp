@@ -1,14 +1,18 @@
-﻿#include <iostream>
+﻿//Лабораторная работа 2, вариант 21
+//Выполнил студент 3-го курса физического факультета Запорожченко Кирилл (ФЗ-11)
+//2023 г.
+
+
+#include <iostream>
 #include <opencv2/opencv.hpp>
+
+
+#define PADDING 3
+#define NORM_COEFICIENT 13
 
 
 using namespace std;
 using namespace cv;
-
-
-//Лабораторная работа 2, вариант 21
-//Выполнил студент 3-го курса физического факультета Запорожченко Кирилл (ФЗ-11)
-//2023 г.
 
 
 int main() {
@@ -41,12 +45,12 @@ int main() {
     int cols = input_image.cols;
 
     //размеры временного изображения, прим. для прим. матричного фильтра наращивания
-    int temp_rows = rows + 3 * 2;
-    int temp_cols = cols + 3 * 2;
+    int temp_rows = rows + PADDING * 2;
+    int temp_cols = cols + PADDING * 2;
 
     //создаем временное изображение с добавленным паддингом 
     Mat temp_image = Mat::zeros(input_image.size(), input_image.type());
-    copyMakeBorder(input_image, temp_image, 3, 3, 3, 3, BORDER_REPLICATE);
+    copyMakeBorder(input_image, temp_image, PADDING, PADDING, PADDING, PADDING, BORDER_REPLICATE);
 
     //создаем новое изображение 
     Mat output_image = Mat::zeros(input_image.size(), input_image.type());
@@ -57,15 +61,13 @@ int main() {
     Mat pixel_neighborhood;
     Vec3b temp_pixel(0, 0, 0);
     
-    for (int i = 3; i < temp_rows - 3; i++)
+    for (int i = PADDING; i < temp_rows - PADDING; i++)
     {
-        for (int j = 3; j < temp_cols - 3; j++)
+        for (int j = PADDING; j < temp_cols - PADDING; j++)
         {
             // Выбираем диапазон столбцов и строк в матрице изображения
-            pixel_neighborhood = temp_image.rowRange(i - 3, i + 3 + 1)
-                .colRange(j - 3, j + 3 + 1);
-
-            printf("\ncurrent pixel = %d - %d = %d; should be same = %d", i, j, temp_image.at<Vec3b>(i, j)[1], pixel_neighborhood.at<Vec3b>(3, 3)[1]);
+            pixel_neighborhood = temp_image.rowRange(i - PADDING, i + PADDING + 1)
+                .colRange(j - PADDING, j + PADDING + 1);
 
             int r = 0, g = 0, b = 0;
 
@@ -76,29 +78,18 @@ int main() {
                     b += pixel_neighborhood.at<Vec3b>(k, l)[0] * extensionMatix[k][l];
                     g += pixel_neighborhood.at<Vec3b>(k, l)[1] * extensionMatix[k][l];
                     r += pixel_neighborhood.at<Vec3b>(k, l)[2] * extensionMatix[k][l];
-                    /*temp_pixel += pixel_neighborhood.at<Vec3b>(k, l) * extensionMatix[k][l];*/
-                    //printf("\ntemp_pixel = %d %d %d", temp_pixel[0], temp_pixel[1], temp_pixel[2]);
                 }
             }
 
-            
-            //// Применение матрицы наращивания к пикселям вокруг текущего пикселя.
-            //for (int k = -3; k <= 3; k++) {
-            //    for (int l = -3; l <= 3; l++) {
-            //        temp_pixel += temp_image.at<Vec3b>(i + k, j + l) * extensionMatix[k + 3][l + 3];
-            //    }
-            //}
-
-
             //записываем пиксель, полученный в результате операции свертки, в новую картинку
-            r /= 13;
-            g /= 13;
-            b /= 13;
+            r /= NORM_COEFICIENT;
+            g /= NORM_COEFICIENT;
+            b /= NORM_COEFICIENT;
 
             temp_pixel[0] = b;
             temp_pixel[1] = g;
             temp_pixel[2] = r;
-            output_image.at<Vec3b>(i - 3, j - 3) = temp_pixel;
+            output_image.at<Vec3b>(i - PADDING, j - PADDING) = temp_pixel;
             temp_pixel = Vec3b(0, 0, 0);
         }
     }
