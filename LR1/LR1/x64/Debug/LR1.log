@@ -1,4 +1,5 @@
 ﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(517,5): warning MSB8028: The intermediate directory (x64\Debug\) contains files shared from another project (LR1.vcxproj).  This can lead to incorrect clean and rebuild behavior.
   Parallel.cpp
+C:\Users\User\Documents\ParallelProgramming\LR1\LR1\Parallel.cpp(87,10): warning C4477: 'printf' : format string '%f' requires an argument of type 'double', but variadic argument 3 has type 'int'
 C:\Users\User\Documents\ParallelProgramming\LR1\LR1\Parallel.cpp(52,13): warning C4101: 'status': unreferenced local variable
   LR1.vcxproj -> C:\Users\User\Documents\ParallelProgramming\LR1\x64\Debug\Parallel.exe

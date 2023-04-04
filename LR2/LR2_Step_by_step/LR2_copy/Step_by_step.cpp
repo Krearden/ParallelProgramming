@@ -19,7 +19,7 @@ int main() {
     system("chcp 65001");
 
     // Загружаем изображение с компьютера
-    Mat input_image = imread("C:\\Users\\User\\Documents\\ParallelProgramming\\LR2\\LR2_Step_by_step\\input_1024x1024.png");
+    Mat input_image = imread("C:\\Users\\User\\Documents\\ParallelProgramming\\LR2\\LR2_Step_by_step\\images\\input_1024x1024.png");
 
     //проверка
     if (input_image.empty()) {
