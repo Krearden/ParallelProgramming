@@ -79,7 +79,7 @@ int main() {
                 }
             }
 
-            //записываем пиксель, полученный в результате операции свертки, в новую картинку
+            //нормируем
             r /= NORM_COEFICIENT;
             g /= NORM_COEFICIENT;
             b /= NORM_COEFICIENT;
