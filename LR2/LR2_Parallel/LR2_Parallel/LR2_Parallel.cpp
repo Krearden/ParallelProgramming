@@ -24,12 +24,15 @@ int main(int argc, char** argv)
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
 	int input_rows, input_cols;
-	int temp_rows, temp_cols;
+	int temp_rows, temp_cols; 
+	int channels;
+	int partial_rows, partial_cols;
+	Mat input_image, temp_image;
 
 	if (rank == 0)
 	{
 		// Загружаем изображение с компьютера
-		Mat input_image = imread("C:\\Users\\User\\Documents\\ParallelProgramming\\LR2\\LR2_Step_by_step\\images\\input_1024x1024.png");
+		input_image = imread("C:\\Users\\User\\Documents\\ParallelProgramming\\LR2\\LR2_Step_by_step\\images\\input_1024x1024.png");
 
 		//проверка
 		if (input_image.empty()) {
@@ -42,25 +45,40 @@ int main(int argc, char** argv)
 		input_rows = input_image.rows;
 		input_cols = input_image.cols;
 		
-		//размеры временного изображения, прим. для прим. матричного фильтра наращивания
+		//размеры временного изображения с добавленным padding border replicate
 		temp_rows = input_rows + PADDING * 2;
 		temp_cols = input_cols + PADDING * 2;
 
 		//создаем временное изображение с добавленным паддингом 
-		Mat temp_image = Mat::zeros(input_image.size(), input_image.type());
+		temp_image = Mat::zeros(input_image.size(), input_image.type());
 		copyMakeBorder(input_image, temp_image, PADDING, PADDING, PADDING, PADDING, BORDER_REPLICATE);
 
-		// Compute the number of rows and columns for each process
-		int num_rows_per_process = temp_image.rows / procs_amount;
-		int num_cols_per_process = temp_image.cols;
+		//число каналов изображений, с которыми ведется работа
+		channels = temp_image.channels();
+
+		//размеры каждого из partial images
+		partial_rows = temp_rows / procs_amount;
+		partial_cols = temp_cols;
+
+		printf("Channels = %d", input_image.channels());
 	}
 
-	//передаем всем процессам размеры исходного изображения
-	MPI_Bcast(&input_rows, 1, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Bcast(&input_cols, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	//выделяем память для части изображения на каждом процессе
+	Mat partial_image(partial_rows, partial_cols, CV_8UC3);
+
+	// Scatter the sub-images to each process
+	MPI_Scatter(temp_image.data, partial_rows * partial_cols * channels, MPI_BYTE,
+		partial_image.data, partial_rows * partial_cols * channels, MPI_BYTE,
+		0, MPI_COMM_WORLD);
+	
+	MPI_Barrier;
+
+	//imshow("Partial image", partial_image);
+	//waitKey(0);
 
 
-	printf("\nTotal procs = %d, I'm number %d; rows = %d", procs_amount, rank, input_rows);
+
+	printf("\ntotal procs = %d, i'm number %d; parial_size = %dx%d", procs_amount, rank, partial_image.rows, partial_image.cols);
 
 	MPI_Finalize();
 	return 0;
