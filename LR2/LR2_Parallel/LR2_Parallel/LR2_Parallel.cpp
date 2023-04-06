@@ -1,6 +1,6 @@
-//Лабораторная работа 2, вариант 21
-//Выполнил студент 3-го курса физического факультета Запорожченко Кирилл (ФЗ-11)
-//2023 г.
+п»ї//Р›Р°Р±РѕСЂР°С‚РѕСЂРЅР°СЏ СЂР°Р±РѕС‚Р° 2, РІР°СЂРёР°РЅС‚ 21
+//Р’С‹РїРѕР»РЅРёР» СЃС‚СѓРґРµРЅС‚ 3-РіРѕ РєСѓСЂСЃР° С„РёР·РёС‡РµСЃРєРѕРіРѕ С„Р°РєСѓР»СЊС‚РµС‚Р° Р—Р°РїРѕСЂРѕР¶С‡РµРЅРєРѕ РљРёСЂРёР»Р» (Р¤Р—-11)
+//2023 Рі.
 
 
 #include "mpi.h"
@@ -23,62 +23,54 @@ int main(int argc, char** argv)
 	MPI_Comm_size(MPI_COMM_WORLD, &procs_amount);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-	int input_rows, input_cols;
-	int temp_rows, temp_cols; 
-	int channels;
 	int partial_rows, partial_cols;
-	Mat input_image, temp_image;
+	int channels;
+	Mat temp_image;
 
 	if (rank == 0)
 	{
-		// Загружаем изображение с компьютера
-		input_image = imread("C:\\Users\\User\\Documents\\ParallelProgramming\\LR2\\LR2_Step_by_step\\images\\input_1024x1024.png");
+		// Р—Р°РіСЂСѓР¶Р°РµРј РёР·РѕР±СЂР°Р¶РµРЅРёРµ СЃ РєРѕРјРїСЊСЋС‚РµСЂР°
+		Mat input_image = imread("C:\\Users\\User\\Documents\\ParallelProgramming\\LR2\\LR2_Step_by_step\\images\\input_1024x1024.png");
 
-		//проверка
+		//РїСЂРѕРІРµСЂРєР°
 		if (input_image.empty()) {
 			printf("\nCould not read the image");
 			MPI_Finalize();
 			return 1;
 		}
 
-		// определяем размеры исходного изображения
-		input_rows = input_image.rows;
-		input_cols = input_image.cols;
-		
-		//размеры временного изображения с добавленным padding border replicate
-		temp_rows = input_rows + PADDING * 2;
-		temp_cols = input_cols + PADDING * 2;
-
-		//создаем временное изображение с добавленным паддингом 
+		//СЃРѕР·РґР°РµРј РІСЂРµРјРµРЅРЅРѕРµ РёР·РѕР±СЂР°Р¶РµРЅРёРµ СЃ РґРѕР±Р°РІР»РµРЅРЅС‹Рј РїР°РґРґРёРЅРіРѕРј 
 		temp_image = Mat::zeros(input_image.size(), input_image.type());
 		copyMakeBorder(input_image, temp_image, PADDING, PADDING, PADDING, PADDING, BORDER_REPLICATE);
 
-		//число каналов изображений, с которыми ведется работа
-		channels = temp_image.channels();
+		//РґР°РЅРЅС‹Рµ РёР·РѕР±Р°СЂР¶РµРЅРёСЏ СЃ replicate padding
+		int temp_rows = temp_image.rows;
+		int temp_cols = temp_image.cols;
 
-		//размеры каждого из partial images
+		//РІС‹С‡РёСЃР»СЏРµРј СЂР°Р·РјРµСЂС‹ РєР°Р¶РґРѕР№ С‡Р°СЃС‚Рё РёР·РѕР±СЂР°Р¶РµРЅРёСЏ
 		partial_rows = temp_rows / procs_amount;
 		partial_cols = temp_cols;
 
-		printf("Channels = %d", input_image.channels());
+		//С‡РёСЃР»Рѕ РєР°РЅР°Р»РѕРІ РёР·РѕР±СЂР°Р¶РµРЅРёР№, СЃ РєРѕС‚РѕСЂС‹РјРё РІРµРґРµС‚СЃСЏ СЂР°Р±РѕС‚Р°
+		channels = temp_image.channels();
 	}
 
-	//выделяем память для части изображения на каждом процессе
+	MPI_Bcast(&partial_rows, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&partial_cols, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&channels, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+	//РІС‹РґРµР»СЏРµРј РїР°РјСЏС‚СЊ РґР»СЏ С‡Р°СЃС‚Рё РёР·РѕР±СЂР°Р¶РµРЅРёСЏ РЅР° РєР°Р¶РґРѕРј РїСЂРѕС†РµСЃСЃРµ
 	Mat partial_image(partial_rows, partial_cols, CV_8UC3);
 
-	// Scatter the sub-images to each process
+	//РґРµР»РёРј РёР·РѕР±СЂР°Р¶РµРЅРёРµ РјРµР¶РґСѓ РїСЂРѕС†РµСЃСЃР°РјРё
 	MPI_Scatter(temp_image.data, partial_rows * partial_cols * channels, MPI_BYTE,
 		partial_image.data, partial_rows * partial_cols * channels, MPI_BYTE,
 		0, MPI_COMM_WORLD);
-	
-	MPI_Barrier;
 
-	//imshow("Partial image", partial_image);
-	//waitKey(0);
+	imshow("Partial img", partial_image);
+	waitKey(0);
 
-
-
-	printf("\ntotal procs = %d, i'm number %d; parial_size = %dx%d", procs_amount, rank, partial_image.rows, partial_image.cols);
+	printf("\ntotal procs = %d, i'm number %d; pr = %d, pc = %d, ch = %d, img = %d", procs_amount, rank, partial_rows, partial_cols, channels, partial_image.at<Vec3b>(0, 0)[0]);
 
 	MPI_Finalize();
 	return 0;
