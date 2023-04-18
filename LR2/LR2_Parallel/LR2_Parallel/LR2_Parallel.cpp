@@ -22,6 +22,10 @@ int main(int argc, char** argv)
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &procs_amount);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	double start_time, end_time, duration;
+
+	MPI_Barrier(MPI_COMM_WORLD);
+	start_time = MPI_Wtime();
 
 	int partial_rows, partial_cols, input_cols, input_rows;
 	int channels;
@@ -30,8 +34,11 @@ int main(int argc, char** argv)
 
 	if (rank == 0)
 	{
+
 		// Загружаем изображение с компьютера
 		input_image = imread("C:\\Users\\User\\Documents\\ParallelProgramming\\LR2\\LR2_Step_by_step\\images\\input_1024x1024.png");
+
+		
 
 		//проверка
 		if (input_image.empty()) {
@@ -227,20 +234,28 @@ int main(int argc, char** argv)
 		output_image = Mat::zeros(input_rows, input_cols, partial_image.type());
 	}
 	
-	//там где черная полоса - видно еще на этапе показа только части изображения
+
 	MPI_Gather(partial_output_img.data, partial_output_img.rows * partial_output_img.cols * channels, MPI_BYTE,
 		output_image.data, partial_output_img.rows * partial_output_img.cols * channels, MPI_BYTE,
 		0, MPI_COMM_WORLD);
 
+	MPI_Barrier(MPI_COMM_WORLD);
+	end_time = MPI_Wtime();
+	duration = end_time - start_time;
+
 
 	if (rank == 0)
 	{
-		imshow("Output #" + std::to_string(rank) + " " + std::to_string(output_image.cols) + "x" + std::to_string(output_image.rows), output_image);
-		waitKey(0);
+		
+
+		
+		
+		printf("%dx%d\nDuration = %f seconds", input_rows, input_cols, duration);
+
+		//imshow("Output #" + std::to_string(rank) + " " + std::to_string(output_image.cols) + "x" + std::to_string(output_image.rows), output_image);
+		//waitKey(0);
 	}
 	
-
-	printf("\ntotal procs = %d, i'm number %d; pr = %d, pc = %d", procs_amount, rank, partial_rows, partial_cols);
 
 	MPI_Finalize();
 	return 0;

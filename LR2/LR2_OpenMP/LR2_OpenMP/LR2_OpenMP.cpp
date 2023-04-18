@@ -1,10 +1,11 @@
-п»ї//Р›Р°Р±РѕСЂР°С‚РѕСЂРЅР°СЏ СЂР°Р±РѕС‚Р° 2, РІР°СЂРёР°РЅС‚ 21 - С‡Р°СЃС‚СЊ СЃ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕР№ РїСЂРѕРіСЂР°РјРјРѕР№
-//Р’С‹РїРѕР»РЅРёР» СЃС‚СѓРґРµРЅС‚ 3-РіРѕ РєСѓСЂСЃР° С„РёР·РёС‡РµСЃРєРѕРіРѕ С„Р°РєСѓР»СЊС‚РµС‚Р° Р—Р°РїРѕСЂРѕР¶С‡РµРЅРєРѕ РљРёСЂРёР»Р» (Р¤Р—-11)
-//2023 Рі.
+//Лабораторная работа 2, вариант 21 - часть с последовательной программой
+//Выполнил студент 3-го курса физического факультета Запорожченко Кирилл (ФЗ-11)
+//2023 г.
 
 
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <omp.h>
 #include <chrono>
 
 
@@ -17,19 +18,22 @@ using namespace cv;
 
 
 int main() {
-    
+    system("chcp 65001");
+    omp_set_num_threads(4);
+
     auto start = std::chrono::high_resolution_clock::now();
 
-    // Р—Р°РіСЂСѓР¶Р°РµРј РёР·РѕР±СЂР°Р¶РµРЅРёРµ СЃ РєРѕРјРїСЊСЋС‚РµСЂР°
+    // Загружаем изображение с компьютера
     Mat input_image = imread("C:\\Users\\User\\Documents\\ParallelProgramming\\LR2\\LR2_Step_by_step\\images\\input_1024x1024.png");
 
-    //РїСЂРѕРІРµСЂРєР°
+
+    //проверка
     if (input_image.empty()) {
         cout << "Could not read the image" << endl;
         return 1;
     }
 
-    // РЎРѕР·РґР°РµРј РјР°С‚СЂРёС†Сѓ РЅР°СЂР°С‰РёРІР°РЅРёСЏ 7x7
+    // Создаем матрицу наращивания 7x7
     int extensionMatix[7][7] = {
         {0, 0, 0, 1, 0, 0, 0},
         {0, 0, 0, 1, 0, 0, 0},
@@ -40,37 +44,39 @@ int main() {
         {0, 0, 0, 1, 0, 0, 0},
     };
 
-    //СЂР°Р·РјРµСЂС‹ РёСЃС…РѕРґРЅРѕРіРѕ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ
+    //размеры исходного изображения
     int rows = input_image.rows;
     int cols = input_image.cols;
 
-    //СЂР°Р·РјРµСЂС‹ РІСЂРµРјРµРЅРЅРѕРіРѕ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ, РїСЂРёРј. РґР»СЏ РїСЂРёРј. РјР°С‚СЂРёС‡РЅРѕРіРѕ С„РёР»СЊС‚СЂР° РЅР°СЂР°С‰РёРІР°РЅРёСЏ
+    //размеры временного изображения, прим. для прим. матричного фильтра наращивания
     int temp_rows = rows + PADDING * 2;
     int temp_cols = cols + PADDING * 2;
 
-    //СЃРѕР·РґР°РµРј РІСЂРµРјРµРЅРЅРѕРµ РёР·РѕР±СЂР°Р¶РµРЅРёРµ СЃ РґРѕР±Р°РІР»РµРЅРЅС‹Рј РїР°РґРґРёРЅРіРѕРј 
+    //создаем временное изображение с добавленным паддингом 
     Mat temp_image = Mat::zeros(input_image.size(), input_image.type());
     copyMakeBorder(input_image, temp_image, PADDING, PADDING, PADDING, PADDING, BORDER_REPLICATE);
 
-    //СЃРѕР·РґР°РµРј РЅРѕРІРѕРµ РёР·РѕР±СЂР°Р¶РµРЅРёРµ 
+    //создаем новое изображение 
     Mat output_image = Mat::zeros(input_image.size(), input_image.type());
 
 
-    //С†РёРєР» РґР»СЏ РїСЂРёРјРµРЅРµРЅРёСЏ РјР°С‚СЂРёС‡РЅРѕРіРѕ С„РёР»СЊС‚СЂР°
-    //РїСЂРѕС…РѕРґРёРјСЃСЏ РїРѕ РІСЃРµРј РїРёРєСЃРµР»СЏРј РёР·РѕР±СЂР°Р¶РµРЅРёСЏ, РєСЂРѕРјРµ padding
+    //цикл для применения матричного фильтра
+    //проходимся по всем пикселям изображения, кроме padding
     Mat pixel_neighborhood;
     Vec3b temp_pixel(0, 0, 0);
     int r = 0, g = 0, b = 0;
-    
+
+    #pragma omp parallel
+    #pragma omp for
     for (int i = PADDING; i < temp_rows - PADDING; i++)
     {
         for (int j = PADDING; j < temp_cols - PADDING; j++)
         {
-            // Р’С‹Р±РёСЂР°РµРј РґРёР°РїР°Р·РѕРЅ СЃС‚РѕР»Р±С†РѕРІ Рё СЃС‚СЂРѕРє РІ РјР°С‚СЂРёС†Рµ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ
+            // Выбираем диапазон столбцов и строк в матрице изображения
             pixel_neighborhood = temp_image.rowRange(i - PADDING, i + PADDING + 1)
                 .colRange(j - PADDING, j + PADDING + 1);
 
-            //РІС‹РїРѕР»РЅСЏРµРј РѕРїРµСЂР°С†РёСЋ СЃРІРµСЂС‚РєРё
+            //выполняем операцию свертки
             for (int k = 0; k < 7; k++)
             {
                 for (int l = 0; l < 7; l++)
@@ -81,20 +87,20 @@ int main() {
                 }
             }
 
-            //РЅРѕСЂРјРёСЂСѓРµРј
+            //нормируем
             r /= NORM_COEFICIENT;
             g /= NORM_COEFICIENT;
             b /= NORM_COEFICIENT;
 
-            //РїСЂРёСЃРІР°РµРІР°РµРј Р·РЅР°С‡РµРЅРёСЏ РєР°РЅР°Р»РѕРІ РїРёРєСЃРµР»СЋ
+            //присваеваем значения каналов пикселю
             temp_pixel[0] = b;
             temp_pixel[1] = g;
             temp_pixel[2] = r;
 
-            //Р·Р°РїРёСЃС‹РІР°РµРј РЅР°Р№РґРµРЅРЅС‹Р№ РїРёРєСЃРµР»СЊ РІ РЅРѕРІРѕРµ РёР·РѕР±СЂР°Р¶РµРЅРёРµ
+            //записываем найденный пиксель в новое изображение
             output_image.at<Vec3b>(i - PADDING, j - PADDING) = temp_pixel;
 
-            //РѕР±РЅСѓР»СЏРµРј Р·РЅР°С‡РµРЅРёСЏ РґР»СЏ СЃР»РµРґСѓСЋС‰РµР№ РёС‚РµСЂР°С†РёРё
+            //обнуляем значения для следующей итерации
             temp_pixel = Vec3b(0, 0, 0);
             b = 0; g = 0; r = 0;
         }
@@ -106,11 +112,11 @@ int main() {
 
     printf("%dx%d\nDuration (seconds) = %f", rows, cols, duration_seconds);
 
-    imwrite("C:\\Users\\User\\Documents\\ParallelProgramming\\LR2\\LR2_Step_by_step\\images\\step_by_step_output\\" + std::to_string(rows) + "x" + std::to_string(cols) + ".png", output_image);
+    imwrite("C:\\Users\\User\\Documents\\ParallelProgramming\\LR2\\LR2_Step_by_step\\images\\openmp_output\\" + std::to_string(rows) + "x" + std::to_string(cols) + ".png", output_image);
 
-    //// РћС‚РѕР±СЂР°Р¶Р°РµРј РѕР±СЂР°Р±РѕС‚Р°РЅРЅРѕРµ РёР·РѕР±СЂР°Р¶РµРЅРёРµ
+    //// Отображаем обработанное изображение
     //imshow("Output Image", output_image);
-    waitKey(0);
+    //waitKey(0);
 
     return 0;
 }
