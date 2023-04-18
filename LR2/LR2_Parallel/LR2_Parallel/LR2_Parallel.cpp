@@ -39,6 +39,12 @@ int main(int argc, char** argv)
 			MPI_Finalize();
 			return 1;
 		}
+		else if (input_image.rows % procs_amount != 0)
+		{
+			printf("\nНеподходящая высота изображения!");
+			MPI_Finalize();
+			return 1;
+		}
 
 		//размеры изначального изображения
 		input_rows = input_image.rows;
@@ -143,9 +149,96 @@ int main(int argc, char** argv)
 		vconcat(received_strip_for_top_padding, partial_image, temp);
 		vconcat(temp, received_strip_for_bottom_padding, partial_padding_img);
 	}
+	MPI_Barrier(MPI_COMM_WORLD);
 
-	imshow("partial img #" + std::to_string(rank) +" " + std::to_string(partial_padding_img.cols) + "x" + std::to_string(partial_padding_img.rows), partial_padding_img);
-	waitKey(0);
+	//imshow("partial img #" + std::to_string(rank) +" " + std::to_string(partial_padding_img.cols) + "x" + std::to_string(partial_padding_img.rows), partial_padding_img);
+	//waitKey(0);
+
+
+
+
+	// --Итак, теперь надо обработать каждую часть изображения с добавленным padding
+	int extensionMatix[7][7] = {
+		{0, 0, 0, 1, 0, 0, 0},
+		{0, 0, 0, 1, 0, 0, 0},
+		{0, 0, 0, 1, 0, 0, 0},
+		{1, 1, 1, 1, 1, 1, 1},
+		{0, 0, 0, 1, 0, 0, 0},
+		{0, 0, 0, 1, 0, 0, 0},
+		{0, 0, 0, 1, 0, 0, 0},
+	};
+	
+	Mat partial_output_img(partial_rows, partial_cols, CV_8UC3);
+
+	//цикл для применения матричного фильтра
+	//проходимся по всем пикселям изображения, кроме padding
+	Mat pixel_neighborhood;
+	Vec3b temp_pixel(0, 0, 0);
+	int r = 0, g = 0, b = 0;
+
+	for (int i = PADDING; i < partial_padding_img.rows - PADDING; i++)
+	{
+		for (int j = PADDING; j < partial_padding_img.cols - PADDING; j++)
+		{
+			// Выбираем диапазон столбцов и строк в матрице изображения
+			pixel_neighborhood = partial_padding_img.rowRange(i - PADDING, i + PADDING + 1)
+				.colRange(j - PADDING, j + PADDING + 1);
+
+			//выполняем операцию свертки
+			for (int k = 0; k < 7; k++)
+			{
+				for (int l = 0; l < 7; l++)
+				{
+					b += pixel_neighborhood.at<Vec3b>(k, l)[0] * extensionMatix[k][l];
+					g += pixel_neighborhood.at<Vec3b>(k, l)[1] * extensionMatix[k][l];
+					r += pixel_neighborhood.at<Vec3b>(k, l)[2] * extensionMatix[k][l];
+				}
+			}
+
+			//нормируем
+			r /= NORM_COEFICIENT;
+			g /= NORM_COEFICIENT;
+			b /= NORM_COEFICIENT;
+
+			//присваеваем значения каналов пикселю
+			temp_pixel[0] = b;
+			temp_pixel[1] = g;
+			temp_pixel[2] = r;
+
+			//записываем найденный пиксель в новое изображение
+			partial_output_img.at<Vec3b>(i - PADDING, j - PADDING) = temp_pixel;
+
+			//обнуляем значения для следующей итерации
+			temp_pixel = Vec3b(0, 0, 0);
+			b = 0; g = 0; r = 0;
+		}
+	}
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	//imshow("partial img #" + std::to_string(rank) +" " + std::to_string(partial_output_img.cols) + "x" + std::to_string(partial_output_img.rows), partial_output_img);
+	//waitKey(0);
+
+
+	//Собираем выходное изображение по частям
+	Mat output_image;
+
+	if (rank == 0) {
+		// выделяем память для массива на корневом процессе
+		output_image = Mat::zeros(input_rows, input_cols, partial_image.type());
+	}
+	
+	//там где черная полоса - видно еще на этапе показа только части изображения
+	MPI_Gather(partial_output_img.data, partial_output_img.rows * partial_output_img.cols * channels, MPI_BYTE,
+		output_image.data, partial_output_img.rows * partial_output_img.cols * channels, MPI_BYTE,
+		0, MPI_COMM_WORLD);
+
+
+	if (rank == 0)
+	{
+		imshow("Output #" + std::to_string(rank) + " " + std::to_string(output_image.cols) + "x" + std::to_string(output_image.rows), output_image);
+		waitKey(0);
+	}
+	
 
 	printf("\ntotal procs = %d, i'm number %d; pr = %d, pc = %d", procs_amount, rank, partial_rows, partial_cols);
 
