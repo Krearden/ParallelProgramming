@@ -25,7 +25,7 @@ int main(int argc, char** argv)
 	double start_time, end_time, duration;
 
 	MPI_Barrier(MPI_COMM_WORLD);
-	start_time = MPI_Wtime();
+	
 
 	int partial_rows, partial_cols, input_cols, input_rows;
 	int channels;
@@ -36,8 +36,8 @@ int main(int argc, char** argv)
 	{
 
 		// Загружаем изображение с компьютера
-		input_image = imread("C:\\Users\\User\\Documents\\ParallelProgramming\\LR2\\LR2_Step_by_step\\images\\input_1024x1024.png");
-
+		input_image = imread("C:\\Users\\User\\Documents\\ParallelProgramming\\LR2\\LR2_Step_by_step\\images\\input_256x256.png");
+		start_time = MPI_Wtime();
 		
 
 		//проверка
@@ -251,6 +251,8 @@ int main(int argc, char** argv)
 		
 		
 		printf("%dx%d\nDuration = %f seconds", input_rows, input_cols, duration);
+
+		imwrite("C:\\Users\\User\\Documents\\ParallelProgramming\\LR2\\LR2_Step_by_step\\images\\mpi_output\\" + std::to_string(input_rows) + "x" + std::to_string(input_cols) + ".png", output_image);
 
 		//imshow("Output #" + std::to_string(rank) + " " + std::to_string(output_image.cols) + "x" + std::to_string(output_image.rows), output_image);
 		//waitKey(0);

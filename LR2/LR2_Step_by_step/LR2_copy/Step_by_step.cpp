@@ -18,10 +18,12 @@ using namespace cv;
 
 int main() {
     
-    auto start = std::chrono::high_resolution_clock::now();
+    
 
     // Загружаем изображение с компьютера
-    Mat input_image = imread("C:\\Users\\User\\Documents\\ParallelProgramming\\LR2\\LR2_Step_by_step\\images\\input_1024x1024.png");
+    Mat input_image = imread("C:\\Users\\User\\Documents\\ParallelProgramming\\LR2\\LR2_Step_by_step\\images\\input_4096x4096.png");
+
+    auto start = std::chrono::high_resolution_clock::now();
 
     //проверка
     if (input_image.empty()) {
