@@ -62,7 +62,7 @@ double L(double previousEl, double currentEl, double nextEl, double step_in_spac
 }
 
 //Решение уравнения методом конечных разнсотей
-vector<vector<double>> solveEquation(vector<double>& init, vector<double>& left, vector<double>& right, double step_in_space, double step_in_time, int T, int N)
+vector<vector<double>> solveEquation(vector<double>& init, vector<double>& left, vector<double>& right, double step_in_space, double step_in_time, int N, int T)
 {
 	//инициализируем двумерный вектор, представляющий сетку значений функции u(x, t)
 	vector<vector<double>> result_grid = vector<vector<double>>(T, vector<double>(N, 0));
