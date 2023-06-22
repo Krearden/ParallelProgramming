@@ -1,5 +1,5 @@
 ﻿  LR3_Step_by_step.cpp
-C:\Users\User\Documents\ParallelProgramming\LR3\LR3_Step_by_step\LR3_Step_by_step\LR3_Step_by_step.cpp(135,17): warning C4244: 'initializing': conversion from '_Rep' to 'double', possible loss of data
+C:\Users\User\Documents\ParallelProgramming\LR3\LR3_Step_by_step\LR3_Step_by_step\LR3_Step_by_step.cpp(137,17): warning C4244: 'initializing': conversion from '_Rep' to 'double', possible loss of data
           with
           [
               _Rep=__int64

@@ -7,6 +7,8 @@
 #include <fstream>
 #include <chrono>
 
+#define TIME_INTERVAL 0.35
+
 
 using f_function = double(double x);
 using namespace std;
@@ -110,9 +112,9 @@ void writeGridToFile(const string& filename, int N, int T, double step_in_space,
 int main()
 {
 	//кол-во точек в пространственной области
-	int N = 100;
+	int N = 70;
 	//кол-во моментов времени, на котор. делится интервал от 0 до T
-	int T = 1000;
+	int T = 9800;
 	string output_filename = "output_N" + to_string(N) + "_T" + to_string(T) + ".txt";
 	vector<double> init;
 	vector<double> left;
@@ -121,8 +123,8 @@ int main()
 	//заполняем вектор init значениями начального распределения функции u(x, 0)
 	double step_in_space = getInitValues(f, N, 1, init);
 	//заполняем вектора left & right - краевые условия  
-	double step_in_time = getInitValues(f_left, T, 0.4, left);
-	getInitValues(f_right, T, 0.4, right);
+	double step_in_time = getInitValues(f_left, T, TIME_INTERVAL, left);
+	getInitValues(f_right, T, TIME_INTERVAL, right);
 
 	auto start_time = chrono::high_resolution_clock::now();
 	for (int i = 0; i < 1000; i++)

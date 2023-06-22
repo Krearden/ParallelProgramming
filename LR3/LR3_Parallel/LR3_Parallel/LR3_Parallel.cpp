@@ -11,10 +11,7 @@
 using namespace std;
 using f_function = double(double x);
 
-double L(double u1, double u2, double u3, double step_in_space, double step_in_time) {
-	double q = step_in_time / (step_in_space * step_in_space);
-	return q * (u1 + u3) + (1 - 2 * q) * u2;
-}
+#define TIME_INTERVAL 0.35
 
 void linearCommunication(double left_send, double right_send, double* left_get, double* right_get, double left, double right, MPI_Comm MPI_COMM_LINEAR)
 {
@@ -46,6 +43,13 @@ void linearCommunication(double left_send, double right_send, double* left_get, 
 		// Принимаем значение от правого соседа
 		MPI_Recv(right_get, 1, MPI_DOUBLE, right_rank, 0, MPI_COMM_LINEAR, MPI_STATUSES_IGNORE);
 	}
+}
+
+//Явная трехточечная конечно-разностная схема
+double L(double previousEl, double currentEl, double nextEl, double step_in_space, double step_in_time)
+{
+	double q = step_in_time / (step_in_space * step_in_space);
+	return q * (previousEl + nextEl) + (1 - 2 * q) * currentEl;
 }
 
 void solveEquation(vector<double>& result_grid, vector<double>& init, vector<double>& left, vector<double>& right, int N, int T, double step_in_space, double step_in_time, int rank, int size) {
@@ -222,10 +226,10 @@ int main(int argc, char** argv)
 		MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
 		//кол-во точек в пространственной области
-		int N = 100;
+		int N = 10;
 		//кол-во моментов времени, на котор. делится интервал от 0 до T
-		int T = 1000;
-		string output_filename = "output_N" + to_string(N) + "_T" + to_string(T) + ".txt";
+		int T = 200;
+		string output_filename = "output_N" + to_string(N) + "_T" + to_string(T) + "_PR" + to_string(N*T) + ".txt";
 		vector<double> init;
 		vector<double> left;
 		vector<double> right;
@@ -238,12 +242,12 @@ int main(int argc, char** argv)
 		//заполняем вектора начального и краевых условий на нулевом процессе
 		if (rank == 0) {
 			step_in_space = getInitValues(f, N, 1, init);
-			step_in_time = getInitValues(f_left, T, 0.4, left);
-			getInitValues(f_right, T, 0.4, right);
+			step_in_time = getInitValues(f_left, T, TIME_INTERVAL, left);
+			getInitValues(f_right, T, TIME_INTERVAL, right);
 		}
 		//заполням вектор краевого условия на последнем процессе
 		if (rank == size - 1) {
-			getInitValues(f_right, T, 0.4, right);
+			getInitValues(f_right, T, TIME_INTERVAL, right);
 		}
 
 		MPI_Bcast(&step_in_time, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
