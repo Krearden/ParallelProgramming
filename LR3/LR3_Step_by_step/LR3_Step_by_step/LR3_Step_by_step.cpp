@@ -6,7 +6,7 @@
 #include <string>
 #include <fstream>
 #include <chrono>
- 
+
 
 using f_function = double(double x);
 using namespace std;
@@ -50,7 +50,7 @@ double getInitValues(f_function f, int N, double interval, vector<double>& resul
 	{
 		result[i] = f(step * i);
 	}
-	
+
 	return step;
 }
 
@@ -62,24 +62,24 @@ double L(double previousEl, double currentEl, double nextEl, double step_in_spac
 }
 
 //Решение уравнения методом конечных разнсотей
-vector<vector<double>> solveEquation(vector<double>& init, vector<double>& left, vector<double>& right, double step_in_space, double step_in_time, int N, int T)
+vector<vector<double>> solveEquation(vector<double>& init, vector<double>& left, vector<double>& right, double step_in_space, double step_in_time, int T, int N)
 {
 	//инициализируем двумерный вектор, представляющий сетку значений функции u(x, t)
 	vector<vector<double>> result_grid = vector<vector<double>>(T, vector<double>(N, 0));
-	
+
 	//начальные условия
-	for (int j = 0; j < N; j++) 
+	for (int j = 0; j < N; j++)
 	{
-		result_grid[0][j] = init[j]; 
+		result_grid[0][j] = init[j];
 	}
 	//граничные условия
-	for (int i = 0; i < T; i++) 
+	for (int i = 0; i < T; i++)
 	{
-		result_grid[i][0] = left[i];  
-		result_grid[i][N - 1] = right[i]; 
+		result_grid[i][0] = left[i];
+		result_grid[i][N - 1] = right[i];
 	}
-	
-	for (int i = 0; i < T - 1; i++) 
+
+	for (int i = 0; i < T - 1; i++)
 	{
 		for (int j = 1; j < N - 1; j++) {
 			result_grid[i + 1][j] = L(result_grid[i][j - 1], result_grid[i][j], result_grid[i][j + 1], step_in_space, step_in_time);  // Вычисление нового значения функции
@@ -110,20 +110,31 @@ void writeGridToFile(const string& filename, int N, int T, double step_in_space,
 int main()
 {
 	//кол-во точек в пространственной области
-	int N = 10; 
+	int N = 100;
 	//кол-во моментов времени, на котор. делится интервал от 0 до T
-	int T = 100;
+	int T = 1000;
 	string output_filename = "output_N" + to_string(N) + "_T" + to_string(T) + ".txt";
 	vector<double> init;
 	vector<double> left;
 	vector<double> right;
+	vector<vector<double>> result_grid;
 	//заполняем вектор init значениями начального распределения функции u(x, 0)
 	double step_in_space = getInitValues(f, N, 1, init);
 	//заполняем вектора left & right - краевые условия  
 	double step_in_time = getInitValues(f_left, T, 0.4, left);
 	getInitValues(f_right, T, 0.4, right);
 
-	vector<vector<double>> result_grid = solveEquation(init, left, right, step_in_space, step_in_time, T, N);
+	auto start_time = chrono::high_resolution_clock::now();
+	for (int i = 0; i < 1000; i++)
+	{
+		result_grid = solveEquation(init, left, right, step_in_space, step_in_time, T, N);
+	}
+		
+	auto end_time = chrono::high_resolution_clock::now();
 
+	double runtime = chrono::duration_cast<chrono::microseconds>(end_time - start_time).count();
+	runtime /= 1000000; //переводим в секунды
+	runtime /= 1000; // среднее с 1000 запусков
 	writeGridToFile(output_filename, N, T, step_in_space, step_in_time, result_grid);
+	printf("Runtime: %.6f\n", runtime);
 }

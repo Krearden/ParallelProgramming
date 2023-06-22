@@ -91,7 +91,8 @@ void solveEquation(vector<double>& result_grid, vector<double>& init, vector<dou
 		}
 		temp = i * x_len;
 		temp2 = (i + 1) * x_len;
-		temp3 = (T - 1) * x_len;
+		temp3 = (T - 1) * x_len; 
+		//обмен значениями граничных точек между соседними процессами
 		linearCommunication(partition[temp + 1], partition[temp + x_len - 2], &(partition[temp + 0]), &(partition[temp + x_len - 1]), left_temp, right_temp, MPI_COMM_LINEAR);
 		for (int j = 1; j < x_len - 1; j++) {
 			partition[temp2 + j] = L(partition[temp + j - 1], partition[temp + j], partition[temp + j + 1], step_in_space, step_in_time);
@@ -221,9 +222,9 @@ int main(int argc, char** argv)
 		MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
 		//кол-во точек в пространственной области
-		int N = 10;
+		int N = 100;
 		//кол-во моментов времени, на котор. делится интервал от 0 до T
-		int T = 100;
+		int T = 1000;
 		string output_filename = "output_N" + to_string(N) + "_T" + to_string(T) + ".txt";
 		vector<double> init;
 		vector<double> left;
@@ -248,14 +249,20 @@ int main(int argc, char** argv)
 		MPI_Bcast(&step_in_time, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 		MPI_Bcast(&step_in_space, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-		//1000 запусков
+		//замер времени 1000 запусков
+		
 		for (int i = 0; i < 1000; i++)
 		{
+			/*MPI_Barrier() для синхронизации всех процессов перед началом каждого запуска, 
+			чтобы убедиться, что все процессы начинают одновременно и измерение времени происходит синхронно.*/
+			MPI_Barrier(MPI_COMM_WORLD);
 			start_time = MPI_Wtime();
 			solveEquation(result_grid, init, left, right, N, T, step_in_space, step_in_time, rank, size);
 			end_time = MPI_Wtime();
 			total_time += end_time - start_time;
 		}
+		
+		
 
 		//запись в файл
 		if (rank == 0) {
@@ -265,9 +272,10 @@ int main(int argc, char** argv)
 		//среднее время с тысячи запусков
 		time = total_time / 1000;
 		//находим максимальное время среди всех процессов и выводим его на экран
-		MPI_Reduce(&time, &total_time, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+		double max_time;
+		MPI_Reduce(&time, &max_time, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 		if (rank == 0) {
-			printf("Runtime: %.6f\n", total_time);
+			printf("Runtime: %.6f\n", max_time);
 		}
 		MPI_Finalize();
 	}
