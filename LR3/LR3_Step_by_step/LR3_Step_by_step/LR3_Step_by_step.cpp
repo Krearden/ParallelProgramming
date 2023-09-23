@@ -112,9 +112,9 @@ void writeGridToFile(const string& filename, int N, int T, double step_in_space,
 int main()
 {
 	//кол-во точек в пространственной области
-	int N = 70;
+	int N = 150;
 	//кол-во моментов времени, на котор. делится интервал от 0 до T
-	int T = 9800;
+	int T = 45000;
 	string output_filename = "output_N" + to_string(N) + "_T" + to_string(T) + ".txt";
 	vector<double> init;
 	vector<double> left;
@@ -129,7 +129,7 @@ int main()
 	auto start_time = chrono::high_resolution_clock::now();
 	for (int i = 0; i < 1000; i++)
 	{
-		result_grid = solveEquation(init, left, right, step_in_space, step_in_time, T, N);
+	result_grid = solveEquation(init, left, right, step_in_space, step_in_time, T, N);
 	}
 		
 	auto end_time = chrono::high_resolution_clock::now();

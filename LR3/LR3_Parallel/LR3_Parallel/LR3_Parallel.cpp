@@ -13,6 +13,7 @@ using f_function = double(double x);
 
 #define TIME_INTERVAL 0.35
 
+//Взаимодействие между процессами - обмен граничными значениями
 void linearCommunication(double left_send, double right_send, double* left_get, double* right_get, double left, double right, MPI_Comm MPI_COMM_LINEAR)
 {
 	// Получение рангов левого и правого соседей
@@ -122,13 +123,13 @@ void solveEquation(vector<double>& result_grid, vector<double>& init, vector<dou
 	vector<int> counts2(size - 1, 1);
 	vector<int> displs2(size - 1, 0);
 	for (int i = 0; i < size - 1; i++) {
-		displs2[i] = displs[i];
+		displs2[i] = displs[i]; //смещение данных для каждого процесса остается тем же
 	}
 
 	if (rank == 0) {
 		for (int i = 0; i < T; i++) {
-			temp = i * N;
-			temp2 = i * (xs_per_process + 2);
+			temp = i * N; // смещение в result_grid для текущей строки
+			temp2 = i * (xs_per_process + 2); // смещение в partition для текущей строки
 			for (int j = 0; j < xs_per_process; j++) {
 				result_grid[temp + j + 1] = partition[temp2 + j + 1];
 			}
@@ -226,10 +227,10 @@ int main(int argc, char** argv)
 		MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
 		//кол-во точек в пространственной области
-		int N = 10;
+		int N = 150;
 		//кол-во моментов времени, на котор. делится интервал от 0 до T
-		int T = 200;
-		string output_filename = "output_N" + to_string(N) + "_T" + to_string(T) + "_PR" + to_string(N*T) + ".txt";
+		int T = 45000;
+		string output_filename = "output_N" + to_string(N) + "_T" + to_string(T) + ".txt";
 		vector<double> init;
 		vector<double> left;
 		vector<double> right;
